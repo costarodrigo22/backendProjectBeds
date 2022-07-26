@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { Patient } from "../entities/Patient";
 import { PatientsRepository } from "../repositories/PatientsRepository";
 
 export class PatientsController {
@@ -124,7 +125,20 @@ export class PatientsController {
     }
 
     return res.status(200).json({ data: patientSelectedById, message: 'Request executed successfully' })
-        
+  }
+
+  // Deleta um paciente
+  async deletePatientById(req: Request, res: Response){
+    const { id } = req.params
+
+    const patientDeleted = await PatientsRepository
+      .createQueryBuilder()
+      .delete()
+      .from(Patient)
+      .where('patients.id = :id', { id: id })
+      .execute()
+
+    return res.status(200).json({ message: 'Patient deleted from base' })
   }
 
 }

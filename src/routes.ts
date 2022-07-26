@@ -12,5 +12,7 @@ routes.get('/patientsList', new PatientsController().getPatients)
 routes.get('/patient/:idPatient', new PatientsController().getOnePatient)
 routes.get('/bedsList', new BedsController().getBeds)
 routes.get('/bed/:idBed', new BedsController().getOneBed)
+routes.delete('/deletePatient/:id', new PatientsController().deletePatientById)
+routes.delete('/deleteBed/:id', new BedsController().deleteBedById)
 
 export default routes

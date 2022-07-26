@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { ReadableStreamDefaultController } from "stream/web";
+import { Bed } from "../entities/Bed";
 import { BedsRepository } from "../repositories/BedsRepository";
 
 export class BedsController {
@@ -66,5 +67,18 @@ export class BedsController {
     }
 
     return res.status(200).json({ data: bedSelectedById, message: 'Request executed successfully' })
+  }
+
+  async deleteBedById(req: Request, res: Response){
+    const { id } = req.params
+
+    const bedDeleted = await BedsRepository
+      .createQueryBuilder()
+      .delete()
+      .from(Bed)
+      .where('beds.id = :id', { id: id })
+      .execute()
+
+    return res.status(200).json({ message: 'Bed deleted from base' })
   }
 }
