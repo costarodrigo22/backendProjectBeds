@@ -7,6 +7,7 @@ export class PatientsController {
   async create(req: Request, res: Response) {
     const { 
       name,
+      document,
       gender,
       birth_date,
       email,
@@ -17,19 +18,20 @@ export class PatientsController {
       allergy,
     } = req.body
 
-    if(!name || !phone || !address || !email){
-      return res.status(400).json({ message: 'Name/phone/address is required' })
+    if(!name || !phone || !document){
+      return res.status(400).json({ message: 'Name | phone | document is required' })
     }
 
-    const patientExists = await PatientsRepository.findOneBy({email: email})
+    const patientExists = await PatientsRepository.findOneBy({document: document})
 
     if(patientExists) {
-      return res.status(400).json({ message: 'This patient is already been taken' })
+      return res.status(400).json({ message: 'This patient already registered' })
     }
 
     try {
       const newPatient = PatientsRepository.create({
         name,
+        document,
         gender,
         birth_date,
         email,
@@ -51,6 +53,7 @@ export class PatientsController {
   async update(req: Request, res: Response) {
     const { 
       name,
+      document,
       gender,
       birth_date,
       email,
@@ -63,8 +66,8 @@ export class PatientsController {
 
     const { idPatient } = req.params
 
-    if(!name || !phone || !address || !email){
-      return res.status(400).json({ message: 'Name/phone/address is required' })
+    if(!name || !phone || !document){
+      return res.status(400).json({ message: 'Name | phone | document is required' })
     }
 
     const patientExists = await PatientsRepository.findOneBy({ id: Number(idPatient) })
@@ -73,15 +76,16 @@ export class PatientsController {
       res.status(400).json({ message: 'Patient not found' })
     }
 
-    const patientExistsByEmail = await PatientsRepository.findOneBy({email: email})
+    const patientExistsByDocument = await PatientsRepository.findOneBy({document: document})
 
-    if(patientExistsByEmail && patientExistsByEmail.id !== Number(idPatient)) {
-      return res.status(400).json({ message: 'This patient is already been taken' })
+    if(patientExistsByDocument && patientExistsByDocument.id !== Number(idPatient)) {
+      return res.status(400).json({ message: 'This document is already been taken' })
     }
 
     try {
       await PatientsRepository.update(idPatient, {
         name,
+        document,
         gender,
         birth_date,
         email,

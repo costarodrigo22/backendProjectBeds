@@ -1,18 +1,28 @@
 import { Request, Response } from "express";
-import { ReadableStreamDefaultController } from "stream/web";
 import { Bed } from "../entities/Bed";
 import { BedsRepository } from "../repositories/BedsRepository";
+import { PatientsRepository } from "../repositories/PatientsRepository";
 
 export class BedsController {
   async create(req: Request, res: Response){
-    const { status } = req.body
+    const { status, document } = req.body
 
     if(!status) {
       res.status(400).json({ message: 'status is required' })
     }
 
+    const dataPatientByDocument = await PatientsRepository
+      .createQueryBuilder('patients')
+      .where('patients.document = :document', { document: document }) 
+      .getOne()
+
     try {
-        const newBed = BedsRepository.create({ status })
+        const newBed = BedsRepository.create({ 
+          status: status,
+          name_patient: dataPatientByDocument?.name,
+          document: dataPatientByDocument?.document,
+          allergy: dataPatientByDocument?.allergy
+        })
         await BedsRepository.save(newBed)
         return res.status(200).json(newBed)
     } catch (error) {
@@ -21,21 +31,49 @@ export class BedsController {
   }
 
   async update(req: Request, res: Response) {
-    const { status } = req.body
+    const { status, document } = req.body
     const { idBed } = req.params
 
     if(!status){
       return res.status(400).json({ message: 'Status is required' })
     }
 
-    const bedExists = BedsRepository.findOneBy({id: Number(idBed)})
+    const bedExists = await BedsRepository.findOneBy({id: Number(idBed)})
 
     if(!bedExists) {
       return res.status(400).json({ message: 'Bed not found' })
     }
 
+    if(status === 'ocupado' && document === null){
+      return res.status(400).json({ messagem: 'Document is required' })
+    }
+
+    const dataPatientByDocument = await PatientsRepository
+    .createQueryBuilder('patients')
+    .where('patients.document = :document', { document: document }) 
+    .getOne()
+
+    if(!dataPatientByDocument){
+      return res.status(400).json({ message: 'Patient not found. Need to register it ' })
+    }
+
     try {
-      const updatedBed = BedsRepository.update(idBed, {status})
+      if(status === 'disponivel' || status === 'em manutencao'){
+        const updatedBed = BedsRepository.update(idBed, {
+          status: status,
+          name_patient: '',
+          document: '',
+          allergy: ''
+        })
+        return res.status(200).json({ message: 'Data has been updated' })  
+      }
+
+      const updatedBed = BedsRepository.update(idBed, {
+        status: status,
+        name_patient: dataPatientByDocument?.name,
+        document: dataPatientByDocument?.document,
+        allergy: dataPatientByDocument?.allergy
+      })
       return res.status(200).json({ message: 'Data has been updated' })
     } catch (error) {
       return res.status(500).json({ message: 'Internal server error' })

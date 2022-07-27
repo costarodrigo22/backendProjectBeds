@@ -8,6 +8,9 @@ export class Patient {
   @Column({ type: 'text' })
   name: string
 
+  @Column({ type: 'text', nullable: true })
+  document: string
+
   @Column({ type: 'text' })
   gender: string
 

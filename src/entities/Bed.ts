@@ -8,6 +8,15 @@ export class Bed {
   @Column()
   status: string
 
+  @Column({ type: 'text', nullable: true })
+  name_patient: string
+
+  @Column({ type: 'text', nullable: true })
+  document: string
+
+  @Column({ type: 'text', nullable: true })
+  allergy: string
+
   @CreateDateColumn()
   created_at: Date
 
