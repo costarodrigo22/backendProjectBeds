@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { Patient } from "../entities/Patient";
+import { BedRequestError, NotFoundError } from "../helpers/api-errors";
 import { PatientsRepository } from "../repositories/PatientsRepository";
 
 export class PatientsController {
@@ -19,7 +20,7 @@ export class PatientsController {
     } = req.body
 
     if(!name || !phone || !document){
-      return res.status(400).json({ message: 'Name | phone | document is required' })
+      throw new BedRequestError('Name | phone | document is required')
     }
 
     const patientExists = await PatientsRepository.findOneBy({document: document})
@@ -28,26 +29,22 @@ export class PatientsController {
       return res.status(400).json({ message: 'This patient already registered' })
     }
 
-    try {
-      const newPatient = PatientsRepository.create({
-        name,
-        document,
-        gender,
-        birth_date,
-        email,
-        phone,
-        address,
-        height,
-        weight,
-        allergy
-      })
+    const newPatient = PatientsRepository.create({
+      name,
+      document,
+      gender,
+      birth_date,
+      email,
+      phone,
+      address,
+      height,
+      weight,
+      allergy
+    })
 
-      await PatientsRepository.save(newPatient)
-      return res.status(200).json(newPatient)
-    } catch (error) {
-      return res.status(500).json({ message: 'Internal server error' })
-    }
-  }
+    await PatientsRepository.save(newPatient)
+    return res.status(200).json(newPatient)
+}
 
   // Atualiza um paciente da tabela 'patients'
   async update(req: Request, res: Response) {
@@ -67,13 +64,13 @@ export class PatientsController {
     const { idPatient } = req.params
 
     if(!name || !phone || !document){
-      return res.status(400).json({ message: 'Name | phone | document is required' })
+      throw new BedRequestError('Name | phone | document is required')
     }
 
     const patientExists = await PatientsRepository.findOneBy({ id: Number(idPatient) })
 
     if(!patientExists){
-      res.status(400).json({ message: 'Patient not found' })
+      throw new NotFoundError('Patient not found')
     }
 
     const patientExistsByDocument = await PatientsRepository.findOneBy({document: document})
@@ -82,38 +79,30 @@ export class PatientsController {
       return res.status(400).json({ message: 'This document is already been taken' })
     }
 
-    try {
-      await PatientsRepository.update(idPatient, {
-        name,
-        document,
-        gender,
-        birth_date,
-        email,
-        phone,
-        address,
-        height,
-        weight,
-        allergy
-      })
-      
-      return res.status(200).json({ message: 'Data has been updated' })
-    } catch (error) {
-      return res.status(500).json({ message: 'Internal server error' })
-    }
-  }
+    await PatientsRepository.update(idPatient, {
+      name,
+      document,
+      gender,
+      birth_date,
+      email,
+      phone,
+      address,
+      height,
+      weight,
+      allergy
+    })
+    
+    return res.status(200).json({ message: 'Data has been updated' })
+}
 
   // Busca todos os pacientes da tabela 'patients'
   async getPatients(req: Request, res: Response){
-    try {
-      const allPatients = await PatientsRepository
-      .createQueryBuilder('patients')
-      .getMany()
+    const allPatients = await PatientsRepository
+    .createQueryBuilder('patients')
+    .getMany()
 
-    return res.status(200).json({ data: allPatients, message: 'Request executed successfully' })
-    } catch (error) {
-      return res.status(500).json({ message: 'Internal server error' })
-    }
-  }
+  return res.status(200).json({ data: allPatients, message: 'Request executed successfully' })
+}
 
   // Busca um paciente na tabela 'patients' pelo id
   async getOnePatient(req: Request, res: Response) {
@@ -125,7 +114,7 @@ export class PatientsController {
       .getOne()
 
     if(!patientSelectedById) {
-      return res.status(400).json({ message: 'Patient not found' })
+      throw new NotFoundError('Patient not found')
     }
 
     return res.status(200).json({ data: patientSelectedById, message: 'Request executed successfully' })
